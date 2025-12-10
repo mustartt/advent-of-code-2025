@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 int main() {
   std::vector<std::pair<long, long>> ranges;
