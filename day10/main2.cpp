@@ -1,12 +1,7 @@
-#include <algorithm>
 #include <climits>
 #include <iostream>
-#include <queue>
-#include <span>
 #include <sstream>
 #include <string>
-#include <string_view>
-#include <unordered_set>
 #include <vector>
 
 struct Machine {
@@ -31,34 +26,44 @@ struct Machine {
   }
 };
 
-void backtrack(std::span<int> state,
-               const std::vector<std::vector<int>> &buttons, int depth,
-               int &steps) {
-  if (std::count(state.begin(), state.end(), 0) == state.size()) {
-    steps = std::min(depth, steps);
-    return;
-  }
-  for (const auto &button : buttons) {
-    int min_val = 0;
-    for (int pos : button) {
-      min_val = std::min(min_val, --state[pos]);
-    }
-    if (min_val >= 0)
-      backtrack(state, buttons, depth + 1, steps);
+std::string build_lp_input(const Machine &m) {
+  int rows = static_cast<int>(m.final_state.size());
+  int cols = static_cast<int>(m.buttons.size());
 
-    for (int pos : button) {
-      ++state[pos];
+  std::ostringstream out;
+  out << rows << " " << cols << "\n";
+
+  // A[i][j] = 1 if i is listed in buttons[j], else 0
+  for (int i = 0; i < rows; ++i) {
+    for (int j = 0; j < cols; ++j) {
+      int val = 0;
+      for (int idx : m.buttons[j]) {
+        if (idx == i) { // indices in buttons are 0-based row indices
+          val = 1;
+          break;
+        }
+      }
+      out << val;
+      if (j + 1 < cols)
+        out << " ";
     }
+    out << "\n";
   }
+
+  // b from final_state characters
+  for (int i = 0; i < rows; ++i) {
+    out << m.voltage[i];
+    if (i + 1 < rows)
+      out << " ";
+  }
+  out << "\n";
+
+  return out.str();
 }
 
-int process_machine(const Machine &m) {
-  int steps = INT_MAX;
-
-  std::vector<int> state = m.voltage;
-  backtrack(state, m.buttons, 0, steps);
-
-  return steps;
+void process_machine(const Machine &m) {
+  std::cout << build_lp_input(m);
+  std::cout << "---\n";
 }
 
 int main() {
@@ -113,13 +118,7 @@ int main() {
       ss >> ch;
     }
 
-    data.debug();
-    int n = process_machine(data);
-    std::cout << "amount = " << n << "\n";
-    total += n;
+    process_machine(data);
   }
-
-  std::cout << "total = " << total << "\n";
-
   return 0;
 }
